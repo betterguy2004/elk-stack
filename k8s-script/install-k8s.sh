@@ -83,6 +83,8 @@ echo "Installing of k8s component is Successfull"
 
 sudo systemctl daemon-reload
 sudo systemctl restart kubelet
+curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+sudo apt-get install -y conntrack-tools
 
 # ---------- Common configuration for both worker and master node is DONE
 # ---------- Below one is For Master Node ( control-plane )
