@@ -35,6 +35,7 @@ sysctl net.bridge.bridge-nf-call-iptables net.bridge.bridge-nf-call-ip6tables ne
 
 # ----------   Installation Of CRI -  CONTAINERD and Docker using Package ( https://docs.docker.com/engine/install/ubuntu/ )
 #              using Binary - ( https://github.com/containerd/containerd/blob/main/docs/getting-started.md  )
+sudo apt-get install -y conntrack || true
 
 sudo apt-get remove docker docker-engine docker.io containerd runc -y
 sudo apt-get update
@@ -106,6 +107,14 @@ if [ "$user_input" -eq 0 ];then
         sudo mkdir -p $HOME/.kube
         sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
         sudo chown $(id -u):$(id -g) $HOME/.kube/config
+ #--------
+ # ---------- Installing Helm 3
+echo "-------------Installing Helm 3-------------"
+curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+# Verify helm for both root and ubuntu user environments
+helm version || true
+su - ubuntu -c "helm version" || true
+
 
 # -----------   Installing weave net (  the deault cidr=10.32.0.0/12 this can be overlap with host newtork so we are going to change it with /16 by downloading its yaml file and make changes in it)
         kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
