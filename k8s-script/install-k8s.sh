@@ -68,7 +68,12 @@ if [ -f /etc/containerd/config.toml ]; then
         sudo sed -i 's/SystemdCgroup = false/SystemdCgroup = true/g' /etc/containerd/config.toml
 fi
 sudo systemctl restart containerd
-
+ # ---------- Installing Helm 3
+echo "-------------Installing Helm 3-------------"
+curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+# Verify helm for both root and ubuntu user environments
+helm version || true
+su - ubuntu -c "helm version" || true
 # ----------  Installing kubeadm, kubelet and kubectl ---------
 sudo apt-get update
 curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
@@ -93,7 +98,8 @@ if [ "$user_input" -eq 0 ];then
         user_ip=$(hostname -I | awk '{print $1}')
         echo "Initializing Kubeadm , may take some time"
         # ------- good practice to pass cidr as it invert overlapping of k8s network with host network 
-        if sudo kubeadm init --pod-network-cidr=10.32.0.0/16 --apiserver-advertise-address=$user_ip --ignore-preflight-errors=all | grep -q 'kubeadm join';then
+        PUBLIC_IP=$(curl -s http://checkip.amazonaws.com)
+        if sudo kubeadm init --pod-network-cidr=10.32.0.0/16 --apiserver-advertise-address=$user_ip --apiserver-cert-extra-sans=$PUBLIC_IP --ignore-preflight-errors=all | grep -q 'kubeadm join';then
                 echo ""
 
         else 
@@ -108,12 +114,7 @@ if [ "$user_input" -eq 0 ];then
         sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
         sudo chown $(id -u):$(id -g) $HOME/.kube/config
  #--------
- # ---------- Installing Helm 3
-echo "-------------Installing Helm 3-------------"
-curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-# Verify helm for both root and ubuntu user environments
-helm version || true
-su - ubuntu -c "helm version" || true
+
 
 
 # -----------   Installing weave net (  the deault cidr=10.32.0.0/12 this can be overlap with host newtork so we are going to change it with /16 by downloading its yaml file and make changes in it)
